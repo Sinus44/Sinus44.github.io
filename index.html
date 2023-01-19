@@ -1,1 +1,67 @@
-<h1>GG</h1>
+<input type="button" onclick="main()"/>
+<input type="button" onclick="start()"/>
+<input id="bps" type="number" value="4"/>
+<input id="syncf" type="number" value="1000"/>
+<input id="dataf" type="number" value="2000"/>
+<input id="data" type="data" value="звуковой привет"/>
+<script>
+// 700 - 850
+// 1000 - 1100
+// 17500 - 17000
+var alphabet = [" ","а","б","в","г","д","е","ё","ж","з","и","й","к","л","м","н","о","п","р","с","т","у","ф","х","ц","ч","ш","щ","ъ","ы","ь","э","ю","я",'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',"!",".",",","?","-","_","+","="]
+
+function RT22(text) {
+	text = text.toLowerCase()
+	out = ""
+	for(i=0;i<text.length;i++) {
+		s= alphabet.indexOf(text[i]).toString(2)
+		while(s.length<8){
+			s = "0"+s
+		}
+		//console.log(s)
+		out += s
+	}
+	console.log("data 4 transmitt: "+out)
+	return out
+}
+
+var bps=0,syncf=0,dataf=0,data="",audioCtx,sounds=[]
+
+function main() {
+	audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
+
+	bps=Number(document.getElementById("bps").value)
+	syncf=Number(document.getElementById("syncf").value)
+	dataf=Number(document.getElementById("dataf").value)
+	data=RT22(document.getElementById("data").value)
+}
+
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
+async function start() {
+	console.log("Начало передачи")
+	for(i=0;i<data.length;i++) {
+
+		play(syncf,0.5/bps) // время на синхронизацию 0.5 общего периода
+		if(data[i]=="1") play(dataf,0.5/bps) // время на информацию 0.5 общего периода
+		
+		console.log("+")
+		await sleep(1000/bps) // время на цикл при 1 бпс 1000мс/1 бпс = фулл период = 1000 мс = 1 сек
+	}
+	console.log("Конец передачи данных\nОтправленно "+data.length+" бит")
+}
+
+async function play(frequency,time) {
+	sounds.push({})
+	sounds[sounds.length-1].osc = audioCtx.createOscillator();
+	sounds[sounds.length-1].osc.type = 'sine';
+	sounds[sounds.length-1].osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+	sounds[sounds.length-1].osc.connect(audioCtx.destination);
+	sounds[sounds.length-1].osc.start();
+	sounds[sounds.length-1].osc.stop(audioCtx.currentTime+time)
+
+}
+</script>
+
